@@ -70,7 +70,7 @@ MOUNT_ARGS=(
     -v "$HOME/.claude.json:/home/claude/.claude.json:Z"
     -v "$WORKSPACE:/workspace:Z"
     -v "$HOME/Projects/$PROJECT:/workspace/$PROJECT:Z"
-    -v "$CONF:/etc/claude-sandbox/domain.conf:ro,Z"
+    -v "$CONF:/etc/claude-sandbox-domain.conf:ro,Z"
     -v "$ROOT/core/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z"
 )
 

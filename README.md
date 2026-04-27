@@ -47,8 +47,9 @@ That's it — the install decision loop is "core + the services I want".
 2. Verify each `MCP_REPOS` sibling is checked out and has a `start.sh`.
 3. Build the `claude-sandbox-core` image (idempotent; first run only).
 4. Run each repo's `start.sh` (also idempotent).
-5. `podman run` the sandbox with the conf, the workspace, the project dir,
-   and any `EXTRA_MOUNTS` / `EXTRA_ENV` from the conf.
+5. `podman run` the sandbox, mounting the conf at
+   `/etc/claude-sandbox-domain.conf` for `entrypoint.sh` to source, plus
+   the workspace, project dir, and any `EXTRA_MOUNTS` / `EXTRA_ENV`.
 6. On Claude exit, run each repo's `stop.sh` so the next start revives them.
 
 The sandbox auto-resumes the prior conversation if one exists for the

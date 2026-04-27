@@ -7,7 +7,7 @@
 # optional services are registered only if a probe succeeds.
 set -euo pipefail
 
-CONF=/etc/claude-sandbox/domain.conf
+CONF=/etc/claude-sandbox-domain.conf
 if [ ! -f "$CONF" ]; then
     echo "entrypoint: $CONF not found — start.sh should mount it." >&2
     exit 1
