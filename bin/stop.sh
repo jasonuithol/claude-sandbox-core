@@ -24,7 +24,8 @@ fi
 # shellcheck disable=SC1090
 source "$CONF"
 
-for repo in "${MCP_REPOS[@]}"; do
+for repo in "${MCP_REPOS[@]}" "${OPTIONAL_REPOS[@]:-}"; do
+    [ -z "$repo" ] && continue
     [ -x "$repo/stop.sh" ] || continue
     echo "==> Stopping $(basename "$repo")..."
     "$repo/stop.sh" "$@" || true

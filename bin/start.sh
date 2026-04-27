@@ -36,7 +36,7 @@ if [ ! -d "$HOME/Projects/$PROJECT" ]; then
     exit 1
 fi
 
-# Verify each MCP repo is checked out
+# Verify each required MCP repo is checked out
 for repo in "${MCP_REPOS[@]}"; do
     if [ ! -d "$repo" ]; then
         echo "Error: required MCP repo not found at $repo"
@@ -49,11 +49,23 @@ for repo in "${MCP_REPOS[@]}"; do
     fi
 done
 
+# Optional repos — start any that happen to be cloned. If a host has
+# mcp-dosre alongside mcp-pygame, we bring it up too (it's cross-domain,
+# useful from inside the pygame sandbox for binary-analysis projects).
+PRESENT_OPTIONAL_REPOS=()
+for repo in "${OPTIONAL_REPOS[@]:-}"; do
+    [ -z "$repo" ] && continue
+    if [ -d "$repo" ] && [ -x "$repo/start.sh" ]; then
+        PRESENT_OPTIONAL_REPOS+=("$repo")
+    fi
+done
+
 # Build the sandbox image if needed (idempotent)
 "$SCRIPT_DIR/setup.sh"
 
 # Bring up each MCP repo. Each repo's start.sh runs its own setup.sh internally.
-for repo in "${MCP_REPOS[@]}"; do
+for repo in "${MCP_REPOS[@]}" "${PRESENT_OPTIONAL_REPOS[@]:-}"; do
+    [ -z "$repo" ] && continue
     echo "==> Starting $(basename "$repo")..."
     "$repo/start.sh"
 done
@@ -100,7 +112,8 @@ podman run -it --rm \
 
 echo "==> Claude exited. Stopping MCP services for $DOMAIN..."
 # stop (don't clean) — next start revives the same containers and preserves state
-for repo in "${MCP_REPOS[@]}"; do
+for repo in "${MCP_REPOS[@]}" "${PRESENT_OPTIONAL_REPOS[@]:-}"; do
+    [ -z "$repo" ] && continue
     [ -x "$repo/stop.sh" ] || continue
     "$repo/stop.sh" 2>/dev/null || true
 done

@@ -19,7 +19,8 @@ if [ -n "$DOMAIN" ]; then
     # shellcheck disable=SC1090
     source "$CONF"
 
-    for repo in "${MCP_REPOS[@]}"; do
+    for repo in "${MCP_REPOS[@]}" "${OPTIONAL_REPOS[@]:-}"; do
+        [ -z "$repo" ] && continue
         [ -x "$repo/clean.sh" ] || continue
         echo "==> Cleaning $(basename "$repo")..."
         "$repo/clean.sh" || true
