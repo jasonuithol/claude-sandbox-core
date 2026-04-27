@@ -73,14 +73,18 @@ done
 # Give host services a moment to bind their ports
 sleep 2
 
-# Workspace defaults to per-domain dir under the core repo if conf didn't set one
+# Per-domain host workspace dir. Created on the host so sibling MCP
+# containers (e.g. valheim-build's /opt/workspace) can persist logs there
+# across runs. NOT bind-mounted into the Claude container — doing so makes
+# podman auto-create empty mountpoint stubs on the host for every nested
+# bind (project, docs, EXTRA_MOUNTS), which accumulate over runs and are
+# owned by the userns-mapped uid (unremovable without `podman unshare`).
 WORKSPACE="${WORKSPACE:-$ROOT/workspaces/$DOMAIN}"
 mkdir -p "$WORKSPACE"
 
 MOUNT_ARGS=(
     -v "$HOME/.claude:/home/claude/.claude:Z"
     -v "$HOME/.claude.json:/home/claude/.claude.json:Z"
-    -v "$WORKSPACE:/workspace:Z"
     -v "$HOME/Projects/$PROJECT:/workspace/$PROJECT:Z"
     -v "$CONF:/etc/claude-sandbox-domain.conf:ro,Z"
     -v "$ROOT/core/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z"
