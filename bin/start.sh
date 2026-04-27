@@ -97,6 +97,27 @@ for e in "${EXTRA_ENV[@]:-}"; do
     ENV_ARGS+=(-e "$e")
 done
 
+# Collect every service name across all domain confs. entrypoint.sh uses this
+# to deregister stale registrations from a previous domain — switching from
+# pygame to valheim should scrub pygame-build/knowledge/dos-re-* etc, not just
+# the current domain's own list.
+ALL_KNOWN_SERVICES=""
+for c in "$ROOT"/domains/*.conf; do
+    names="$(
+        bash -c '
+            # shellcheck disable=SC1090
+            source "$1"
+            for e in "${SERVICES[@]:-}" "${OPTIONAL_SERVICES[@]:-}"; do
+                [ -z "$e" ] && continue
+                printf "%s\n" "${e%%|*}"
+            done
+        ' _ "$c"
+    )"
+    ALL_KNOWN_SERVICES="$ALL_KNOWN_SERVICES $names"
+done
+ALL_KNOWN_SERVICES="$(echo "$ALL_KNOWN_SERVICES" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')"
+ENV_ARGS+=(-e "ALL_KNOWN_SERVICES=$ALL_KNOWN_SERVICES")
+
 echo "==> Launching Claude sandbox: domain=$DOMAIN project=$PROJECT"
 
 # --userns=keep-id and :Z labels are required for rootless podman so Claude

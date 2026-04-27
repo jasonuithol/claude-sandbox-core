@@ -16,10 +16,11 @@ fi
 # shellcheck disable=SC1090
 source "$CONF"
 
-# Idempotent: deregister anything we might add before adding it.
-for entry in "${SERVICES[@]}" "${OPTIONAL_SERVICES[@]:-}"; do
-    [ -z "$entry" ] && continue
-    name="${entry%%|*}"
+# Idempotent: deregister every service that any domain might register.
+# bin/start.sh aggregates this from all domains/*.conf so switching domains
+# scrubs registrations left behind by previous sessions (the claude config
+# at ~/.claude.json is host-mounted, so it persists across container runs).
+for name in ${ALL_KNOWN_SERVICES:-}; do
     claude mcp remove "$name" 2>/dev/null || true
 done
 
