@@ -48,6 +48,25 @@ for entry in "${OPTIONAL_SERVICES[@]:-}"; do
     fi
 done
 
+# If the domain mounts a SANDBOX.md under /workspace/docs/, surface it as
+# /workspace/CLAUDE.md so Claude's CLAUDE.md auto-load (which walks cwd
+# ancestors) picks it up. The cwd is /workspace/<project>/, so /workspace/
+# is the first ancestor checked. Without this symlink, the doc lives in a
+# sibling dir and never auto-loads.
+#
+# /workspace must be writable for the symlink. The image's Dockerfile
+# chmods it 1777 for that reason — but on older images it's still 755 and
+# the symlink will fail. Treat the failure as non-fatal: the session is
+# still useful without auto-load, sandbox-Claude can be told to read the
+# doc explicitly.
+if [ -f /workspace/docs/SANDBOX.md ] && [ ! -e /workspace/CLAUDE.md ]; then
+    if ! ln -sf /workspace/docs/SANDBOX.md /workspace/CLAUDE.md 2>/dev/null; then
+        echo "entrypoint: could not symlink /workspace/CLAUDE.md (rebuild" \
+             "the claude-sandbox-core image to fix); SANDBOX.md will not" \
+             "auto-load. Read it via: cat /workspace/docs/SANDBOX.md" >&2
+    fi
+fi
+
 # Auto-resume the prior conversation for this cwd if one exists.
 # Claude stores conversations in ~/.claude/projects/<cwd-with-slashes-as-dashes>/
 SESSION_DIR="$HOME/.claude/projects/$(pwd | tr / -)"
