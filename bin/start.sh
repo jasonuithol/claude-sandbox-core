@@ -74,7 +74,7 @@ done
 sleep 2
 
 # Per-domain host workspace dir. Created on the host so sibling MCP
-# containers (e.g. valheim-build's /opt/workspace) can persist logs there
+# containers (e.g. valheim-mod's /opt/workspace) can persist logs there
 # across runs. NOT bind-mounted into the Claude container — doing so makes
 # podman auto-create empty mountpoint stubs on the host for every nested
 # bind (project, docs, EXTRA_MOUNTS), which accumulate over runs and are
