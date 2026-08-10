@@ -21,14 +21,14 @@ workspaces/  default per-domain workspace dirs (created on demand)
 ```bash
 git clone https://github.com/jasonuithol/claude-sandbox-core ~/Projects/claude-sandbox-core
 
-# Clone the MCP services you want. Each domain conf lists its required repos.
-git clone https://github.com/jasonuithol/mcp-pygame   ~/Projects/ai-agent-mcps/mcp-pygame    # for pygame domain
-git clone https://github.com/jasonuithol/mcp-valheim  ~/Projects/ai-agent-mcps/mcp-valheim   # for valheim domain
-git clone https://github.com/jasonuithol/mcp-steam    ~/Projects/ai-agent-mcps/mcp-steam     # for valheim domain
-git clone https://github.com/jasonuithol/mcp-dosre    ~/Projects/ai-agent-mcps/mcp-dosre     # optional, opportunistic
+# All MCP services live in one monorepo. Each domain conf points at the
+# mcp-* subdirectory it needs; one clone covers every domain.
+git clone https://github.com/jasonuithol/ai-agent-mcps ~/Projects/ai-agent-mcps
 ```
 
-That's it — the install decision loop is "core + the services I want".
+That's it — the install decision loop is "core + the monorepo". Domains only
+start the services their conf lists, so the unused subdirectories cost
+nothing until a domain asks for them.
 
 ## Usage
 
@@ -44,7 +44,7 @@ That's it — the install decision loop is "core + the services I want".
 `bin/start.sh` does, in order:
 
 1. Source `domains/<domain>.conf`.
-2. Verify each `MCP_REPOS` sibling is checked out and has a `start.sh`.
+2. Verify each `MCP_REPOS` entry (an `ai-agent-mcps` subdirectory) is present and has a `start.sh`.
 3. Build the `claude-sandbox-core` image (idempotent; first run only).
 4. Run each repo's `start.sh` (also idempotent).
 5. `podman run` the sandbox, mounting the conf at
@@ -71,12 +71,18 @@ EXTRA_ENV=()
 No code changes needed — `bin/*.sh` and `core/entrypoint.sh` iterate these
 arrays generically.
 
-## Why split out the MCP services?
+## Why keep the MCP services separate?
 
-Each `mcp-*` sibling is a self-contained service with its own lifecycle
-(`setup.sh`, `start.sh`, `stop.sh`, `clean.sh`). `claude-sandbox-core` only
-knows the four-script contract — it doesn't know what's inside, what
-ports anything binds, or which images get built. That split lets each
-service evolve independently and lets the same MCP run under multiple
-domains (e.g. `mcp-steam` is consumed by the valheim domain but isn't
-Valheim-specific).
+The services live in the [ai-agent-mcps](https://github.com/jasonuithol/ai-agent-mcps)
+monorepo (consolidated from the former per-service `mcp-*` repos, full
+history preserved), but each `mcp-*` subdirectory is still a self-contained
+service with its own lifecycle (`setup.sh`, `start.sh`, `stop.sh`,
+`clean.sh`). `claude-sandbox-core` only knows the four-script contract — it
+doesn't know what's inside, what ports anything binds, or which images get
+built. That split lets each service evolve independently and lets the same
+MCP run under multiple domains (e.g. `mcp-steam` is consumed by the valheim
+domain but isn't Valheim-specific).
+
+All services implement the stateless MCP 2026-07-28 protocol (official
+`mcp` SDK v2); registration is unchanged — `claude mcp add --transport http`
+negotiates the protocol era per connection.

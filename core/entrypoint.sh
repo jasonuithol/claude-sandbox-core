@@ -32,10 +32,19 @@ for entry in "${SERVICES[@]}"; do
     claude mcp add "$name" --transport http "$url"
 done
 
-# Optional services — register only if reachable. MCP streamable-http endpoints
-# return some HTTP status (often 406) to a plain GET, so any response means alive.
+# Optional services — register only if reachable. A plain GET is no good as a
+# probe: SDK v2 servers answer it with an SSE stream that stays open, so curl
+# hits its timeout and reports dead. Probe with a real stateless tools/list
+# POST (MCP 2026-07-28) instead — it gets an immediate JSON reply from a
+# migrated server, and an immediate 4xx from a legacy one; either means alive.
 probe() {
-    curl -sS -o /dev/null -m 2 "$1" >/dev/null 2>&1
+    curl -sS -o /dev/null -m 2 -X POST "$1" \
+        -H 'Content-Type: application/json' \
+        -H 'Accept: application/json, text/event-stream' \
+        -H 'MCP-Protocol-Version: 2026-07-28' \
+        -H 'Mcp-Method: tools/list' \
+        -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"sandbox-probe","version":"0"},"io.modelcontextprotocol/clientCapabilities":{}}}}' \
+        >/dev/null 2>&1
 }
 
 for entry in "${OPTIONAL_SERVICES[@]:-}"; do
