@@ -22,10 +22,10 @@ workspaces/  default per-domain workspace dirs (created on demand)
 git clone https://github.com/jasonuithol/claude-sandbox-core ~/Projects/claude-sandbox-core
 
 # Clone the MCP services you want. Each domain conf lists its required repos.
-git clone https://github.com/jasonuithol/mcp-pygame   ~/Projects/mcp-pygame    # for pygame domain
-git clone https://github.com/jasonuithol/mcp-valheim  ~/Projects/mcp-valheim   # for valheim domain
-git clone https://github.com/jasonuithol/mcp-steam    ~/Projects/mcp-steam     # for valheim domain
-git clone https://github.com/jasonuithol/mcp-dosre    ~/Projects/mcp-dosre     # optional, opportunistic
+git clone https://github.com/jasonuithol/mcp-pygame   ~/Projects/ai-agent-mcps/mcp-pygame    # for pygame domain
+git clone https://github.com/jasonuithol/mcp-valheim  ~/Projects/ai-agent-mcps/mcp-valheim   # for valheim domain
+git clone https://github.com/jasonuithol/mcp-steam    ~/Projects/ai-agent-mcps/mcp-steam     # for valheim domain
+git clone https://github.com/jasonuithol/mcp-dosre    ~/Projects/ai-agent-mcps/mcp-dosre     # optional, opportunistic
 ```
 
 That's it — the install decision loop is "core + the services I want".
@@ -61,10 +61,10 @@ use `/clear`.
 Drop a `domains/<name>.conf` declaring the four arrays:
 
 ```bash
-MCP_REPOS=( "$HOME/Projects/mcp-foo" )
+MCP_REPOS=( "$HOME/Projects/ai-agent-mcps/mcp-foo" )
 SERVICES=( "foo-build|http://localhost:5192/mcp" )
 OPTIONAL_SERVICES=()
-EXTRA_MOUNTS=( "$HOME/Projects/mcp-foo/docs:/workspace/docs:ro,Z" )
+EXTRA_MOUNTS=( "$HOME/Projects/ai-agent-mcps/mcp-foo/docs:/workspace/docs:ro,Z" )
 EXTRA_ENV=()
 ```
 
